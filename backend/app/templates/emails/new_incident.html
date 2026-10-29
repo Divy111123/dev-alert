@@ -1,0 +1,58 @@
+{% extends "emails/base.html" %}
+
+{% block badge %}
+  <span class="badge badge-{{ incident.severity }}">{{ incident.severity }}</span>
+{% endblock %}
+
+{% block content %}
+  <h2 class="title">New Incident Detected: {{ incident.error_type }}</h2>
+  <p style="color: #94a3b8; font-size: 14px; margin-top: 0;">{{ incident.message }}</p>
+
+  <table class="meta-table">
+    <tr>
+      <td class="label">Incident ID</td>
+      <td class="val"><code>{{ incident.id }}</code></td>
+    </tr>
+    <tr>
+      <td class="label">Project</td>
+      <td class="val"><strong>{{ project.name }}</strong></td>
+    </tr>
+    <tr>
+      <td class="label">Environment</td>
+      <td class="val"><span style="text-transform: capitalize;">{{ incident.environment }}</span></td>
+    </tr>
+    <tr>
+      <td class="label">Phase</td>
+      <td class="val">{{ incident.phase }}</td>
+    </tr>
+    <tr>
+      <td class="label">Affected Service</td>
+      <td class="val">{{ incident.service }}</td>
+    </tr>
+    <tr>
+      <td class="label">Routing Owner</td>
+      <td class="val">{{ assigned_to }} <br><span style="font-size: 11px; color: #94a3b8;">({{ incident.routing_reason }})</span></td>
+    </tr>
+    <tr>
+      <td class="label">Timestamp</td>
+      <td class="val">{{ timestamp }}</td>
+    </tr>
+  </table>
+
+  {% if stack_trace %}
+    <h3 style="font-size: 14px; color: #cbd5e1; margin-bottom: 6px;">Sanitized Stack Trace</h3>
+    <div class="code-box">{{ stack_trace }}</div>
+  {% endif %}
+
+  {% if ai_summary %}
+    <div class="ai-box">
+      <strong>🤖 AI-Assisted Troubleshooting Suggestion</strong><br>
+      {{ ai_summary }}
+    </div>
+  {% endif %}
+
+  <div style="text-align: center;">
+    <a href="{{ dashboard_url }}/incidents/{{ incident.id }}" class="btn">View & Investigate Incident</a>
+  </div>
+{% endblock %}
+

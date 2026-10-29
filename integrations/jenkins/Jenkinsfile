@@ -1,0 +1,67 @@
+pipeline {
+    agent any
+
+    environment {
+        DEVALERT_ENDPOINT = 'http://devalert-backend:8000/api/v1/webhooks/jenkins'
+        DEVALERT_API_KEY = credentials('devalert-project-api-key')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo "Compiling application..."
+                sh 'npm run build'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo "Executing automated tests..."
+                sh 'npm test'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo "Deploying to staging environment..."
+                sh './scripts/deploy.sh staging'
+            }
+        }
+    }
+
+    post {
+        failure {
+            script {
+                def failedStage = env.STAGE_NAME ?: "Build"
+                def payload = """{
+                    "job_name": "${env.JOB_NAME}",
+                    "build_number": "${env.BUILD_NUMBER}",
+                    "stage": "${failedStage}",
+                    "branch": "${env.BRANCH_NAME ?: 'main'}",
+                    "commit_sha": "${env.GIT_COMMIT ?: ''}",
+                    "build_url": "${env.BUILD_URL}",
+                    "repository": "${env.GIT_URL ?: ''}",
+                    "environment": "testing",
+                    "severity": "high",
+                    "error_message": "Jenkins pipeline failure in stage '${failedStage}' for build #${env.BUILD_NUMBER}",
+                    "log_excerpt": "Build failed during execution. Inspect full console at ${env.BUILD_URL}"
+                }"""
+
+                httpRequest(
+                    url: "${DEVALERT_ENDPOINT}",
+                    httpMode: 'POST',
+                    contentType: 'APPLICATION_JSON',
+                    customHeaders: [[name: 'X-API-Key', value: "${DEVALERT_API_KEY}"]],
+                    requestBody: payload,
+                    validResponseCodes: '200:299'
+                )
+            }
+        }
+    }
+}

@@ -1,0 +1,31 @@
+{% extends "emails/base.html" %}
+
+{% block badge %}
+  <span class="badge badge-low">CONFIGURATION TEST</span>
+{% endblock %}
+
+{% block content %}
+  <h2 class="title">DevAlert Email Verification Test</h2>
+  <p style="color: #cbd5e1; font-size: 14px;">Congratulations! Your DevAlert notification channel has been configured successfully.</p>
+  <p style="color: #94a3b8; font-size: 13px;">This test confirms that your SMTP or transactional email provider settings are operating properly and alerts will reach the assigned developers when runtime errors occur.</p>
+
+  <table class="meta-table">
+    <tr>
+      <td class="label">Project</td>
+      <td class="val">{{ project_name }}</td>
+    </tr>
+    <tr>
+      <td class="label">Recipient</td>
+      <td class="val">{{ recipient_email }}</td>
+    </tr>
+    <tr>
+      <td class="label">Sent At</td>
+      <td class="val">{{ timestamp }}</td>
+    </tr>
+  </table>
+
+  <div style="text-align: center;">
+    <a href="{{ dashboard_url }}" class="btn">Open DevAlert Dashboard</a>
+  </div>
+{% endblock %}
+

@@ -1,0 +1,13 @@
+{
+  "event_type": "DatabaseDeadlockAlert",
+  "summary": "Deadlock detected in transaction 849202 on PostgreSQL cluster",
+  "component": "order-processor",
+  "environment": "production",
+  "phase": "production",
+  "severity": "critical",
+  "trace": "org.postgresql.util.PSQLException: ERROR: deadlock detected\n  Detail: Process 14002 waits for ExclusiveLock on relation ...",
+  "metadata": {
+    "node_id": "pg-node-primary-01",
+    "cluster": "prod-us-east-1"
+  }
+}

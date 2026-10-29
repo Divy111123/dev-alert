@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: devalert-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-devalert}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devalert_secure_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-devalert_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-devalert} -d ${POSTGRES_DB:-devalert_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: devalert-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: devalert-mailhog
+    restart: always
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web UI mail-catcher
+    environment:
+      MH_STORAGE: memory
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: devalert-backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-devalert}:${POSTGRES_PASSWORD:-devalert_secure_pass}@postgres:5432/${POSTGRES_DB:-devalert_db}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-devalert-production-super-secret-key-replace-me}
+      EMAIL_MODE: ${EMAIL_MODE:-smtp}
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_FROM_EMAIL: notifications@devalert.local
+      SMTP_FROM_NAME: DevAlert Monitoring
+      FRONTEND_URL: http://localhost:5173
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: devalert-worker
+    restart: always
+    command: celery -A app.core.celery_app.celery_app worker --loglevel=info -Q emails
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-devalert}:${POSTGRES_PASSWORD:-devalert_secure_pass}@postgres:5432/${POSTGRES_DB:-devalert_db}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      EMAIL_MODE: ${EMAIL_MODE:-smtp}
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_FROM_EMAIL: notifications@devalert.local
+      SMTP_FROM_NAME: DevAlert Monitoring
+      FRONTEND_URL: http://localhost:5173
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: devalert-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

@@ -1,0 +1,57 @@
+{% extends "emails/base.html" %}
+
+{% block badge %}
+  <span class="badge badge-critical">CRITICAL SEVERITY</span>
+{% endblock %}
+
+{% block content %}
+  <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+    <h2 class="title" style="color: #f87171; margin: 0;">🚨 CRITICAL INCIDENT: Immediate Attention Required</h2>
+  </div>
+
+  <p style="font-size: 15px; color: #f1f5f9; font-weight: 500;">{{ incident.error_type }}: {{ incident.message }}</p>
+
+  <table class="meta-table">
+    <tr>
+      <td class="label">Incident ID</td>
+      <td class="val"><code>{{ incident.id }}</code></td>
+    </tr>
+    <tr>
+      <td class="label">Project</td>
+      <td class="val"><strong>{{ project.name }}</strong></td>
+    </tr>
+    <tr>
+      <td class="label">Environment</td>
+      <td class="val"><strong style="color: #f87171;">{{ incident.environment|upper }}</strong></td>
+    </tr>
+    <tr>
+      <td class="label">Phase</td>
+      <td class="val">{{ incident.phase }}</td>
+    </tr>
+    <tr>
+      <td class="label">Component</td>
+      <td class="val">{{ incident.service }}</td>
+    </tr>
+    <tr>
+      <td class="label">Assigned Owner</td>
+      <td class="val"><strong>{{ assigned_to }}</strong> <br><span style="font-size: 11px; color: #94a3b8;">{{ incident.routing_reason }}</span></td>
+    </tr>
+  </table>
+
+  {% if stack_trace %}
+    <h3 style="font-size: 14px; color: #cbd5e1; margin-bottom: 6px;">Sanitized Stack Trace</h3>
+    <div class="code-box">{{ stack_trace }}</div>
+  {% endif %}
+
+  {% if ai_summary %}
+    <div class="ai-box">
+      <strong>🤖 Suggested Remediations</strong><br>
+      {{ ai_summary }}
+    </div>
+  {% endif %}
+
+  <div style="text-align: center;">
+    <a href="{{ dashboard_url }}/incidents/{{ incident.id }}" class="btn" style="background-color: #dc2626;">Acknowledge Incident Now</a>
+  </div>
+{% endblock %}
+

@@ -1,0 +1,39 @@
+name: CI Pipeline
+
+on: [push, pull_request]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Tests
+        id: test_step
+        run: npm test
+
+      - name: Notify DevAlert on Failure
+        if: failure()
+        run: |
+          curl -X POST "https://devalert.yourdomain.com/api/v1/webhooks/github" \
+            -H "X-API-Key: ${{ secrets.DEVALERT_PROJECT_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "workflow": "${{ github.workflow }}",
+              "run_id": "${{ github.run_id }}",
+              "job": "test-and-build",
+              "failed_step": "${{ steps.test_step.outcome == '\''failure'\'' && '\''Run Tests'\'' || '\''Unknown Step'\'' }}",
+              "repository": "${{ github.repository }}",
+              "branch": "${{ github.ref_name }}",
+              "commit_sha": "${{ github.sha }}",
+              "run_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+              "message": "GitHub Actions CI workflow failure on branch ${{ github.ref_name }}",
+              "severity": "high",
+              "environment": "testing"
+            }'

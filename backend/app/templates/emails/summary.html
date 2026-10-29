@@ -1,0 +1,38 @@
+{% extends "emails/base.html" %}
+
+{% block badge %}
+  <span class="badge badge-medium">SUMMARY</span>
+{% endblock %}
+
+{% block content %}
+  <h2 class="title">Incident Activity Summary: {{ incident.error_type }}</h2>
+  <p style="color: #cbd5e1; font-size: 14px;">This is a recurring incident summary. The error has occurred <strong>{{ incident.occurrence_count }} times</strong> in <strong>{{ incident.environment }}</strong>.</p>
+
+  <table class="meta-table">
+    <tr>
+      <td class="label">Incident ID</td>
+      <td class="val"><code>{{ incident.id }}</code></td>
+    </tr>
+    <tr>
+      <td class="label">Project</td>
+      <td class="val">{{ project.name }}</td>
+    </tr>
+    <tr>
+      <td class="label">First Seen</td>
+      <td class="val">{{ incident.first_seen }}</td>
+    </tr>
+    <tr>
+      <td class="label">Last Seen</td>
+      <td class="val">{{ incident.last_seen }}</td>
+    </tr>
+    <tr>
+      <td class="label">Total Occurrences</td>
+      <td class="val">{{ incident.occurrence_count }}</td>
+    </tr>
+  </table>
+
+  <div style="text-align: center;">
+    <a href="{{ dashboard_url }}/incidents/{{ incident.id }}" class="btn">View Activity Details</a>
+  </div>
+{% endblock %}
+

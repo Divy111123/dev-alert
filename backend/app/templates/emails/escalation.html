@@ -1,0 +1,42 @@
+{% extends "emails/base.html" %}
+
+{% block badge %}
+  <span class="badge badge-high">SEVERITY ESCALATED</span>
+{% endblock %}
+
+{% block content %}
+  <h2 class="title">Incident Escalation Alert</h2>
+  <p style="color: #cbd5e1; font-size: 14px;">The severity of incident <code>{{ incident.id }}</code> has escalated to <strong>{{ incident.severity|upper }}</strong> due to repeated occurrences (Count: {{ incident.occurrence_count }}).</p>
+
+  <table class="meta-table">
+    <tr>
+      <td class="label">Project</td>
+      <td class="val">{{ project.name }}</td>
+    </tr>
+    <tr>
+      <td class="label">Error Type</td>
+      <td class="val"><strong>{{ incident.error_type }}</strong></td>
+    </tr>
+    <tr>
+      <td class="label">Occurrence Count</td>
+      <td class="val"><strong style="color: #f59e0b;">{{ incident.occurrence_count }} times</strong></td>
+    </tr>
+    <tr>
+      <td class="label">First Seen</td>
+      <td class="val">{{ incident.first_seen }}</td>
+    </tr>
+    <tr>
+      <td class="label">Last Seen</td>
+      <td class="val">{{ incident.last_seen }}</td>
+    </tr>
+    <tr>
+      <td class="label">Assigned Owner</td>
+      <td class="val">{{ assigned_to }}</td>
+    </tr>
+  </table>
+
+  <div style="text-align: center;">
+    <a href="{{ dashboard_url }}/incidents/{{ incident.id }}" class="btn">Review Escalated Incident</a>
+  </div>
+{% endblock %}
+

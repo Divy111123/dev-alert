@@ -1,0 +1,30 @@
+{% extends "emails/base.html" %}
+
+{% block badge %}
+  <span class="badge badge-resolved">RESOLVED</span>
+{% endblock %}
+
+{% block content %}
+  <h2 class="title" style="color: #34d399;">Incident Resolved: {{ incident.error_type }}</h2>
+  <p style="color: #cbd5e1; font-size: 14px;">Incident <code>{{ incident.id }}</code> in project <strong>{{ project.name }}</strong> has been marked as resolved.</p>
+
+  <table class="meta-table">
+    <tr>
+      <td class="label">Incident ID</td>
+      <td class="val"><code>{{ incident.id }}</code></td>
+    </tr>
+    <tr>
+      <td class="label">Total Occurrences</td>
+      <td class="val">{{ incident.occurrence_count }}</td>
+    </tr>
+    <tr>
+      <td class="label">Resolved By</td>
+      <td class="val">{{ resolved_by }}</td>
+    </tr>
+  </table>
+
+  <div style="text-align: center;">
+    <a href="{{ dashboard_url }}/incidents/{{ incident.id }}" class="btn" style="background-color: #059669;">View Closed Incident</a>
+  </div>
+{% endblock %}
+
