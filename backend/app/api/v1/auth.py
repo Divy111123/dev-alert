@@ -8,6 +8,7 @@ from app.models.organization import Organization, OrganizationMember, OrgRole
 from app.schemas.auth import UserCreate, UserLogin, UserResponse, Token
 from app.api.deps import get_current_user
 from app.services.audit_service import log_action
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter()
 
@@ -90,7 +91,47 @@ def login(login_in: UserLogin, db: Session = Depends(get_db)):
     token = create_access_token({"sub": str(user.id), "email": user.email, "org_id": org_id})
     return Token(access_token=token, token_type="bearer", user=UserResponse.model_validate(user))
 
+@router.post("/login/oauth2", include_in_schema=False)
+def oauth2_login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    # Swagger sends the registered email in the username field
+    user = db.query(User).filter(
+        User.email == form_data.username
+    ).first()
 
+    if not user or not verify_password(
+        form_data.password, user.hashed_password
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user account."
+        )
+
+    membership = db.query(OrganizationMember).filter(
+        OrganizationMember.user_id == user.id
+    ).first()
+
+    org_id = membership.organization_id if membership else None
+
+    token = create_access_token({
+        "sub": str(user.id),
+        "email": user.email,
+        "org_id": org_id
+    })
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
+    }
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user

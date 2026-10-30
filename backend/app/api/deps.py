@@ -13,7 +13,7 @@ from app.models.user import User
 from app.models.organization import Organization, OrganizationMember, OrgRole
 from app.models.project import Project, ApiKey
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login/oauth2", auto_error=False)
 
 # Simple in-memory sliding window rate limiter for API key requests
 _rate_limits = defaultdict(list)
